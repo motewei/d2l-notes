@@ -1,17 +1,17 @@
 ## 1. 线性回归是什么？
-机器学习中的线性回归就是通过学习一个线性关系模型来尽可能准确地预测或估计新的输出值。  
+线性回归就是通过学习一个线性关系模型来尽可能准确地预测或估计新的输出值。  
   
-线性回归是基于[[线性模型linear model|线性模型]]，**学得 $f(x_i)=wx_i+b$ ，尽可能使得 $f(x_i)$ 逼近于 $y_i$ 。**    
+线性回归是基于[线性模型](Linear-model.md)，**学得 $f(x_i)=wx_i+b$ ，尽可能使得 $f(x_i)$ 逼近于 $y_i$ 。**    
 为了达到这个目标，就要**确定 $w$ 和 $b$  ,能使得 $f(x_i)$ 和 $y_i$ 之间的误差最小**。  
-这个误差的[[距离度量|度量方式]]有很多，一般用到**均方误差**，即为：  
+这个误差的度量方式<!-- TODO-[度量方式|距离度量] -->有很多，一般用到**均方误差**，即为：  
 $$
 (w^*,b^*)=\arg{\min_{(w,b)}}\sum_{i=1}^m(y_i-wx_i-b)^2
 $$
 而求解这个均方误差又使用到了[[最小二乘法]]。最后求得
 $$w=\frac{\sum_{i=1}^{m}y_i(x_i-\bar{x})}{\sum_{i=1}^mx_i^2-\frac{1}{m}(\sum_{i=1}^mx_i)^2}$$
 $$b=\frac{1}{m}\sum_{i=1}^m(y_i-wx_i)$$
-这个误差的量化就是损失函数（loss function）。  
-在求解的过程中会使用[[梯度下降法]]来不断在损失函数递减的方向上更新参数来降低误差，以求得解。  
+这个误差的量化就是[损失函数（loss function）](Loss-Function-and-Error.md)。  
+在求解的过程中会使用[梯度下降法](Gradient-Descent.md)来不断在损失函数递减的方向上更新参数来降低误差，以求得解。  
 - 线性回归模型是一个简单的神经网络
 <img src="https://zh-v2.d2l.ai/_images/singleneuron.svg" alt="单层神经网络" width="250" height="150">
 
@@ -137,4 +137,62 @@ plt.ylabel('y')
 plt.title('Linear Regression')
 plt.show()
 ```
+- 使用Pytorch简洁实现
+```python
+# 生成数据集
+import numpy as np
+import torch
+from torch.utils import data
 
+# 生成数据集的函数
+def synthetic_data(w, b, num_examples):
+	"""生成y=Xw+b+噪声"""
+	x = torch.normal(0, 1, (num_examples, lern(w)))
+	y = torch.matmul(X, w) + b
+	y += torch.normal(0, 0.01, y.shape)
+	return X, y.shape((-1, 1))
+
+true_w = torch.tensor([2, -3.4])
+true_b = 4.2
+features, labels = synthetic_data(true_w, true_b, 1000)
+
+# 读取数据集
+def load_array(data_array, batch_size, is_train=True):
+	"""构造一个pytorch数据迭代器"""
+	dataset = data.TensorDataset(*data_arrays)
+	return data.DataLoader(dataset, batch_size, shuffle=is_train)
+
+batch_size = 10
+data_iter = load_array((features, labels), batch_size)
+
+# 定义模型
+from torch import nn
+
+net = nn.Sequential(nn.Linear(2, 1)) # 输入2输出1形状的全连接层
+
+# 初始化参数
+net[0].weight.data.normal_(0, 0.01)
+net[0].bias.data.fill_(0)
+
+# 损失函数
+loss = nn.MSELoss()
+
+# 优化算法
+trainer = torch.optim.SGD(net.parameters(), lr=0.03)
+
+# 训练
+num_epochs = 3
+for epoch in range(num_epochs):
+	for X, y in data_iter:
+		l = loss(net(X), y)
+		trainer.zero_grad()
+		l.backward()
+		trainer.step()
+	l = loss(net(features), labels)
+	print(f'epoch {epoch + 1}, loss {l:f}')
+
+w = net[0].weight.data
+print('w的估计误差', true_w - w.reshape(true_w.shape))
+b = net[0].bias.data
+print('b的估计误差', true_b - b)
+```
